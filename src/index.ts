@@ -1,5 +1,5 @@
 import express from "express"
-import TelegramBot, { Message } from "node-telegram-bot-api"
+import TelegramBot, { KeyboardButton, Message } from "node-telegram-bot-api"
 
 interface UserName {
   firstName: string
@@ -20,17 +20,11 @@ const bot = new TelegramBot(telegramToken, {
   polling: true,
 })
 
+// const webhookURL = `https://your-vercel-deployment-url.vercel.app/${telegramToken}`
+
+// bot.setWebHook(webhookURL)
+
 let userNames: { [chatId: number]: UserName } = {}
-
-// TODO: Define /echo
-// bot.onText(/\/echo (.+)/, (msg, match) => {
-//   const chatId = msg.chat.id
-
-//   const resp = match && match[1]
-
-//   bot.sendMessage(chatId, resp as string)
-//   console.log("Message Sent Now")
-// })
 
 export const prompts = [
   {
@@ -50,57 +44,185 @@ export const prompts = [
       { value: "SSS 3", text: "SSS 3" },
     ],
   },
-  // {
-  //   question: "Would you like to Access the Study Pack for Your Class?"
-  // }
+  {
+    question: "Would you like to Access the Study Pack for Your Class?",
+    response: [
+      { value: "Yes", text: "Yes" },
+      { value: "No", text: "No" },
+    ],
+  },
+  {
+    question: "Pick a Subject",
+    response: [
+      {
+        value: "English",
+        text: "English",
+      },
+      { value: "Maths", text: "Maths" },
+      { value: "Science", text: "Science" },
+      { value: "Biology", text: "Biology" },
+    ],
+  },
+  {
+    question: "How about any of these?",
+    response: [
+      { value: "Waec Prep Kit", text: "Waec Prep Kit" },
+      {
+        value: "Tips for Virtual Education",
+        text: "Tips for Virtual Education",
+      },
+      {
+        value: "Corona Virus - A Book for Children",
+        text: "Corona Virus - A Book for Children // Corona is gone though.",
+      },
+    ],
+  },
 ]
 
-const userResponses: { [chatId: number]: string } = {}
+const userResponses: { [chatId: number]: string[] } = {}
+const userSessions: { [chatId: number]: { currentStep: number; data: {} } } = {}
 
-bot.onText(/start/i, (msg) => {
-  const chatId = msg.chat.id
+// handle send next question
+const handleNextQuestion = async (chatId: number): Promise<void> => {
+  try {
+    // set the current session
+    const session = userSessions[chatId]
 
-  const welcomeMessage = `
-    Hi! I am the OEQA_LAGOS_CHATBOT,
-It's my Pleasure To Assist You.
+    // set the current Prompt Index
+    const promptIndex = session ? session.currentStep : 0
+
+    // set the current user prompt to the user's valid responses length / 0 if otherwise
+    // if not 0, send the next question. not the current (I believe that question must have been answered) one.
+
+    // check if user already answered all questions / not
+    if (promptIndex < prompts.length) {
+      // set current prompt index
+      const currentUserPrompt = prompts[promptIndex]
+
+      const options = currentUserPrompt.response.map((resp) => [
+        { text: resp.text },
+      ])
+
+      const question = `${promptIndex + 1}. ${currentUserPrompt.question}}`
+
+      // update the session count
+      session.currentStep++
+
+      // send message to User.
+      await bot.sendMessage(chatId, question, {
+        reply_markup: {
+          keyboard: options,
+          resize_keyboard: true,
+        },
+      })
+    } else {
+      // End Session
+      delete userResponses[chatId]
+
+      await bot.sendMessage(
+        chatId,
+        `
+      Thanks! ${userNames[chatId].firstName},
+      
+      It was really nice talking to you.
+      
+      I'm glad I could be of assistance to you Today!.
+      Bye, and Have a Nice Day.
+      `
+      )
+    }
+  } catch (error: any) {
+    console.log("Error Occured")
+  }
+}
+
+// send welcome Message
+const welcomeMessage = `
+Hi! 
+
+WELCOME TO THE LAGOS STATE OFFICE OF EDUCATION QUALITY ASSURANCE
+
+Lagos State Office of Education Quality Assurance was establish through an executive order on September 13th, 2013 and became operational on 2nd of March, 2015. Our Vision is Excellence In Education and Our Mission is to support and enhance improvement in the quality of educational provision outcomes for learners in all school below tertiary level. Competence, Dedication, Excellence, Integrity, Professionalism, Quality are our core values
+
+I am the OEQA_LAGOS_CHATBOT,
+
+It's my Pleasure To Assist You Today!.
 
 What is your First and Last Name?
-    `
+`
 
-  // bot.sendMessage(chatId, welcomeMessage)
+bot.onText(/hi/i, async (msg) => {
+  const chatId = msg.chat.id
 
-  prompts.map((prompt) => {
-    bot.sendMessage(chatId, prompt.question)
+  const text = msg.text
+
+  await bot.sendMessage(chatId, welcomeMessage)
+
+  bot.once("message", async (msg) => {
+    const response = msg.text
+
+    if (response) {
+      const [firstName, lastName] = response.split(" ", 2)
+
+      userNames[chatId] = {
+        firstName: firstName,
+        lastName: lastName,
+      }
+
+      await bot.sendMessage(
+        chatId,
+        `
+      Welcome! ${userNames[chatId].firstName}. Your Name has been saved.
+      
+      It's nice meeting you.`
+      )
+
+      // start asking Questions
+      await handleNextQuestion(chatId)
+    } else {
+      await bot.sendMessage(
+        chatId,
+        `
+      You have not yet entered your Names!.
+      
+      Kindly Provide your Names to proceed.`
+      )
+    }
   })
 })
 
-bot.on("message", (msg: Message) => {
+// TODO: Start a New Session
+bot.onText(/\/restart/i, async (msg) => {
   const chatId = msg.chat.id
-  const text = msg.text
 
-  // TODO: Check if the user has an active session
-  if (userResponses[chatId]) {
-    // Find the users current prompt
-    const currentUserPropmt = prompts.find(
-      (prompt) => prompt.question === userResponses[chatId]
-    )
-
-    // Store the user's response.
-    if (currentUserPropmt) {
-      const matchedResponse = currentUserPropmt.response.find(
-        (resp) => resp.text.toLowerCase() === text?.toLowerCase()
-      )
-
-      if (matchedResponse) {
-        userResponses[chatId] = matchedResponse.value
-        bot.sendMessage(chatId, `You Selected ${matchedResponse.text}`)
-      } else {
-        bot.sendMessage(chatId, "Please Select a Valid Response")
-      }
-    }
-  } else {
-    bot.sendMessage(chatId, `You Said ${text}`)
+  // end ongoing session, If one exists
+  if (userSessions[chatId]) {
+    delete userSessions[chatId]
   }
+
+  // start a new session
+  userSessions[chatId] = { currentStep: 0, data: {} }
+
+  // send welcome message
+  await bot.sendMessage(chatId, welcomeMessage)
+
+  // send questions --- Start From the Beginning.
+  await handleNextQuestion(chatId)
+})
+
+// listen to all messages
+bot.on("message", async (msg) => {
+  const chatId = msg.chat.id
+
+  const response = msg.text
+
+  if (!userResponses[chatId]) {
+    userResponses[chatId] = []
+  }
+
+  userResponses[chatId].push(response as string)
+
+  await handleNextQuestion(chatId)
 })
 
 app.listen(PORT, () => {
