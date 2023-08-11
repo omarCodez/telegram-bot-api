@@ -103,7 +103,7 @@ const handleNextQuestion = async (chatId: number): Promise<void> => {
         { text: resp.text },
       ])
 
-      const question = `${promptIndex + 1}. ${currentUserPrompt.question}}`
+      const question = `${promptIndex + 1}. ${currentUserPrompt.question}`
 
       // update the session count
       session.currentStep++
