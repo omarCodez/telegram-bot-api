@@ -1,230 +1,276 @@
-import express from "express"
-import TelegramBot, { KeyboardButton, Message } from "node-telegram-bot-api"
+import express, { Express } from "express"
+import TelegramBot, {
+  KeyboardButton,
+  Message,
+  SendMessageOptions,
+} from "node-telegram-bot-api"
+import { prompts } from "./lib/prompt"
+import dotenv from "dotenv"
 
-interface UserName {
-  firstName: string
-  lastName: string
+type Username = {
+  firstname: string
+  lastname: string
 }
 
-const app = express()
+export type PromptProps = {
+  question: string
+  response: {
+    value: string
+    text: string
+  }[]
+}
+
+type SessionData = {
+  currentPrompt?: PromptProps
+}
+
+// Response Actions
+type ResponseAction = (chatId: number) => Promise<void>
+
+const app: Express = express()
+
+dotenv.config()
 
 app.use(express.json())
 
-const PORT = process.env.PORT || 5000
-const baseUrl = `/api/v1/bot`
+// TODO: Install and setup `dotenv`
+const PORT = process.env.PORT || 5001
 
-const telegramToken = `6458448932:AAHWKZiUp05ScxCM1TtRLF57aJULGuNL8ko`
+const telegramBotToken =
+  process.env.TELEGRAM_BOT_TOKEN ||
+  `6458448932:AAHWKZiUp05ScxCM1TtRLF57aJULGuNL8ko`
 
-const bot = new TelegramBot(telegramToken, {
-  //   baseApiUrl: baseUrl,
+const telegramBot = new TelegramBot(telegramBotToken, {
   polling: true,
 })
 
-// const webhookURL = `https://your-vercel-deployment-url.vercel.app/${telegramToken}`
+let userName: { [chatId: number]: Username } = {}
+let userResponses: { [chatId: number]: { value: string; text: string }[] } = {}
+let userSession: {
+  [chatId: number]: { currentStep: number; data: SessionData }
+} = {}
 
-// bot.setWebHook(webhookURL)
+// user options
+let userClass
+let subject
+let altOpts
 
-let userNames: { [chatId: number]: UserName } = {}
+const welcomeMessage = `
+Instructions:
+1. Read the Prompt carefully.
+2. Reply with your chosen option.
+3. Send 'hi' to start a conversation
+4. Send '/start' to Restart From the Beginning.
+5. Enjoy the conversation!
+`
 
-export const prompts = [
-  {
-    question: "Which Class are you in?",
-    response: [
-      { value: "Primary 1", text: "Primary 1" },
-      { value: "Primary 2", text: "Primary 2" },
-      { value: "Primary 3", text: "Primary 3" },
-      { value: "Primary 4", text: "Primary 4" },
-      { value: "Primary 5", text: "Primary 5" },
-      { value: "Primary 6", text: "Primary 6" },
-      { value: "JSS 1", text: "JSS 1" },
-      { value: "JSS 2", text: "JSS 2" },
-      { value: "JSS 3", text: "JSS 3" },
-      { value: "SSS 1", text: "SSS 1" },
-      { value: "SSS 2", text: "SSS 2" },
-      { value: "SSS 3", text: "SSS 3" },
-    ],
+// ------------ Response Actions ---------------
+
+const responseActions: Record<string, ResponseAction> = {
+  Primary1: async (chatId: number) => {
+    await telegramBot.sendMessage(chatId, "You selected Primary 1")
+    userSession[chatId].currentStep++
+    await sendNextQuestion(chatId)
   },
-  {
-    question: "Would you like to Access the Study Pack for Your Class?",
-    response: [
-      { value: "Yes", text: "Yes" },
-      { value: "No", text: "No" },
-    ],
+  English: async (chatId: number) => {
+    // Handle English option
+    await telegramBot.sendMessage(chatId, "You selected English.")
   },
-  {
-    question: "Pick a Subject",
-    response: [
-      {
-        value: "English",
-        text: "English",
-      },
-      { value: "Maths", text: "Maths" },
-      { value: "Science", text: "Science" },
-      { value: "Biology", text: "Biology" },
-    ],
+  Maths: async (chatId: number) => {
+    // Handle Maths option
+    await telegramBot.sendMessage(chatId, "You selected Maths.")
   },
-  {
-    question: "How about any of these?",
-    response: [
-      { value: "Waec Prep Kit", text: "Waec Prep Kit" },
-      {
-        value: "Tips for Virtual Education",
-        text: "Tips for Virtual Education",
-      },
-      {
-        value: "Corona Virus - A Book for Children",
-        text: "Corona Virus - A Book for Children // Corona is gone though.",
-      },
-    ],
+  Science: async (chatId: number) => {
+    // Handle Science option
+    await telegramBot.sendMessage(chatId, "You selected Science.")
   },
-]
+  Biology: async (chatId: number) => {
+    // Handle Biology option
+    await telegramBot.sendMessage(chatId, "You selected Biology.")
+  },
+  // Add more response-action pairs as needed
+}
 
-const userResponses: { [chatId: number]: string[] } = {}
-const userSessions: { [chatId: number]: { currentStep: number; data: {} } } = {}
+// ------------ Response Actions End -----------
 
-// handle send next question
-const handleNextQuestion = async (chatId: number): Promise<void> => {
-  try {
-    // set the current session
-    const session = userSessions[chatId]
+const sendNextQuestion = async (chatId: number): Promise<void> => {
+  if (!userSession[chatId]) {
+    userSession[chatId] = { currentStep: 0, data: {} }
+  }
 
-    // set the current Prompt Index
-    const promptIndex = session ? session.currentStep : 0
+  const session = userSession[chatId]
 
-    // set the current user prompt to the user's valid responses length / 0 if otherwise
-    // if not 0, send the next question. not the current (I believe that question must have been answered) one.
+  const finalMessage = `
+Thanks ${userName[chatId]?.firstname},
 
-    // check if user already answered all questions / not
-    if (promptIndex < prompts.length) {
-      // set current prompt index
-      const currentUserPrompt = prompts[promptIndex]
+It was really nice talking to you.
 
-      const options = currentUserPrompt.response.map((resp) => [
+I'm glad I could be of assistance Today!
+Here's the Link to your Study Pack.`
+
+  const promptIndex = session.currentStep
+
+  if (promptIndex < prompts.length) {
+    const currentPrompt = prompts[promptIndex]
+
+    if (
+      promptIndex === 1 &&
+      userResponses[chatId] &&
+      userResponses[chatId][1]?.text === "No"
+    ) {
+      session.currentStep = +2
+
+      // await sendNextQuestion(chatId)
+      const options = currentPrompt.response.map((resp) => [
         { text: resp.text },
       ])
 
-      const question = `${promptIndex + 1}. ${currentUserPrompt.question}`
+      const question = `${promptIndex + 1} - ${currentPrompt.question}`
 
-      // update the session count
-      session.currentStep++
+      // session.currentStep++
+      session.data.currentPrompt = currentPrompt
 
-      // send message to User.
-      await bot.sendMessage(chatId, question, {
-        reply_markup: {
-          keyboard: options,
-          resize_keyboard: true,
-        },
+      const replyMarkup = {
+        keyboard: options,
+        resize_keyboard: true,
+      }
+
+      await telegramBot.sendMessage(chatId, question, {
+        reply_markup: replyMarkup,
       })
     } else {
-      // End Session
-      delete userResponses[chatId]
+      const options = currentPrompt.response.map((resp) => [
+        { text: resp.text },
+      ])
 
-      await bot.sendMessage(
-        chatId,
-        `
-      Thanks! ${userNames[chatId].firstName},
-      
-      It was really nice talking to you.
-      
-      I'm glad I could be of assistance to you Today!.
-      Bye, and Have a Nice Day.
-      `
-      )
+      const question = `${promptIndex + 1} - ${currentPrompt.question}`
+
+      session.currentStep++
+      session.data.currentPrompt = currentPrompt
+
+      const replyMarkup = {
+        keyboard: options,
+        resize_keyboard: true,
+      }
+
+      await telegramBot.sendMessage(chatId, question, {
+        reply_markup: replyMarkup,
+      })
     }
-  } catch (error: any) {
-    console.log("Error Occured")
+  } else {
+    // prompts completed
+    delete userResponses[chatId] // is this correct / necessary?
+
+    await telegramBot.sendMessage(chatId, finalMessage, {
+      reply_markup: {
+        keyboard: [],
+        resize_keyboard: false,
+        remove_keyboard: true,
+      },
+    })
+    await sendPackLink(chatId)
   }
 }
 
-// send welcome Message
-const welcomeMessage = `
-Hi! 
+// Send study pack link
+const sendPackLink = async (chatId: number): Promise<void> => {
+  const keyboard = {
+    inline_keyboard: [
+      [
+        {
+          text: "Read Study Pack Online",
+          url: "https://oeqalagos.com/wp-content/uploads/2020/03/Year-1-Home-Learning-Pack.pdf-min.pdf",
+        },
+      ],
+    ],
+  }
 
-WELCOME TO THE LAGOS STATE OFFICE OF EDUCATION QUALITY ASSURANCE
+  await telegramBot.sendMessage(
+    chatId,
+    `Click the Button  ⬇  to Download Your Pack!.`,
+    {
+      reply_markup: keyboard,
+    }
+  )
+}
 
-Lagos State Office of Education Quality Assurance was establish through an executive order on September 13th, 2013 and became operational on 2nd of March, 2015. Our Vision is Excellence In Education and Our Mission is to support and enhance improvement in the quality of educational provision outcomes for learners in all school below tertiary level. Competence, Dedication, Excellence, Integrity, Professionalism, Quality are our core values
+telegramBot.on("message", async (message) => {
+  const chatId = message.chat.id
+  const response = message.text
 
-I am the OEQA_LAGOS_CHATBOT,
+  const session = userSession[chatId]
 
-It's my Pleasure To Assist You Today!.
+  console.log(userSession[chatId]?.currentStep)
 
-What is your First and Last Name?
-`
+  if (session && session.data.currentPrompt) {
+    const selectedOption = session.data.currentPrompt.response.find(
+      (resp) => resp.text === response
+    )
 
-bot.onText(/hi/i, async (msg) => {
-  const chatId = msg.chat.id
+    if (selectedOption) {
+      userResponses[chatId] = userResponses[chatId] || []
+      userResponses[chatId].push(selectedOption)
 
-  const text = msg.text
+      const action: ResponseAction | undefined =
+        responseActions[selectedOption.value]
 
-  await bot.sendMessage(chatId, welcomeMessage)
-
-  bot.once("message", async (msg) => {
-    const response = msg.text
-
-    if (response) {
-      const [firstName, lastName] = response.split(" ", 2)
-
-      userNames[chatId] = {
-        firstName: firstName,
-        lastName: lastName,
-      }
-
-      await bot.sendMessage(
-        chatId,
-        `
-      Welcome! ${userNames[chatId].firstName}. Your Name has been saved.
-      
-      It's nice meeting you.`
-      )
-
-      // start asking Questions
-      await handleNextQuestion(chatId)
+      await sendNextQuestion(chatId)
     } else {
-      await bot.sendMessage(
+      await telegramBot.sendMessage(
         chatId,
         `
-      You have not yet entered your Names!.
+      Invalid Response.
       
-      Kindly Provide your Names to proceed.`
+      Please select a valid response.`
       )
     }
+  }
+
+  // If there is a current Prompt
+})
+
+const captureUserName = async (chatId: number) => {
+  // Capture response
+  await telegramBot.sendMessage(chatId, `What is your First and Last Name?`)
+  telegramBot.once("message", async (responseMsg) => {
+    const names = responseMsg.text
+
+    if (names) {
+      const [firstname, lastname] = names.split(" ", 2)
+
+      userName[chatId] = {
+        firstname,
+        lastname,
+      }
+
+      await telegramBot.sendMessage(
+        chatId,
+        `
+      Welcome! ${firstname}`
+      )
+
+      await sendNextQuestion(chatId)
+    } else {
+      await telegramBot.sendMessage(chatId, "Enter Your Names to Proceed!.")
+      captureUserName(chatId) // Re-capture user's name if not provided
+    }
   })
+}
+
+// restart
+telegramBot.onText(/\/start/i, async (message) => {
+  const chatId = message.chat.id
+
+  userSession[chatId] = { currentStep: 0, data: {} }
+  userResponses[chatId] = []
+  delete userName[chatId]
+
+  await telegramBot.sendMessage(chatId, welcomeMessage)
+
+  captureUserName(chatId)
 })
 
-// TODO: Start a New Session
-bot.onText(/\/restart/i, async (msg) => {
-  const chatId = msg.chat.id
-
-  // end ongoing session, If one exists
-  if (userSessions[chatId]) {
-    delete userSessions[chatId]
-  }
-
-  // start a new session
-  userSessions[chatId] = { currentStep: 0, data: {} }
-
-  // send welcome message
-  await bot.sendMessage(chatId, welcomeMessage)
-
-  // send questions --- Start From the Beginning.
-  await handleNextQuestion(chatId)
-})
-
-// listen to all messages
-bot.on("message", async (msg) => {
-  const chatId = msg.chat.id
-
-  const response = msg.text
-
-  if (!userResponses[chatId]) {
-    userResponses[chatId] = []
-  }
-
-  userResponses[chatId].push(response as string)
-
-  await handleNextQuestion(chatId)
-})
-
+// Start Server
 app.listen(PORT, () => {
   console.log(`Listening on PORT: ${PORT}`)
 })
