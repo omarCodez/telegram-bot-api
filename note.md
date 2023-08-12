@@ -64,3 +64,50 @@ Here's the Link to your Study Pack.`
     await sendPackLink(chatId)
   }
 }
+
+
+<!-- --- -->
+
+if (
+      promptIndex === 2 &&
+      userResponses[chatId][1]?.text === "No"
+    ) {
+      session.currentStep = +2
+
+      // await sendNextQuestion(chatId)
+      const options = currentPrompt.response.map((resp) => [
+        { text: resp.text },
+      ])
+
+      const question = `${promptIndex + 1} - ${currentPrompt.question}`
+
+      // session.currentStep++
+      session.data.currentPrompt = currentPrompt
+
+      const replyMarkup = {
+        keyboard: options,
+        resize_keyboard: true,
+      }
+
+      await telegramBot.sendMessage(chatId, question, {
+        reply_markup: replyMarkup,
+      })
+    } else {
+      const options = currentPrompt.response.map((resp) => [
+        { text: resp.text },
+      ])
+
+      const question = `${promptIndex + 1} - ${currentPrompt.question}`
+
+      session.currentStep++
+      session.data.currentPrompt = currentPrompt
+
+      const replyMarkup = {
+        keyboard: options,
+        resize_keyboard: true,
+      }
+
+      await telegramBot.sendMessage(chatId, question, {
+        reply_markup: replyMarkup,
+      })
+    }

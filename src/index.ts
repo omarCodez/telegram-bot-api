@@ -20,6 +20,12 @@ export type PromptProps = {
   }[]
 }
 
+type UserSession = {
+  currentStep: number
+  data: SessionData
+  responses: { value: string; text: string }[]
+}
+
 type SessionData = {
   currentPrompt?: PromptProps
 }
@@ -46,14 +52,13 @@ const telegramBot = new TelegramBot(telegramBotToken, {
 
 let userName: { [chatId: number]: Username } = {}
 let userResponses: { [chatId: number]: { value: string; text: string }[] } = {}
-let userSession: {
-  [chatId: number]: { currentStep: number; data: SessionData }
-} = {}
+const userSession: Record<number, UserSession> = {}
 
 // user options
 let userClass
 let subject
 let altOpts
+let pack: string = ""
 
 const welcomeMessage = `
 Instructions:
@@ -69,7 +74,6 @@ Instructions:
 const responseActions: Record<string, ResponseAction> = {
   Primary1: async (chatId: number) => {
     await telegramBot.sendMessage(chatId, "You selected Primary 1")
-    userSession[chatId].currentStep++
     await sendNextQuestion(chatId)
   },
   English: async (chatId: number) => {
@@ -95,7 +99,7 @@ const responseActions: Record<string, ResponseAction> = {
 
 const sendNextQuestion = async (chatId: number): Promise<void> => {
   if (!userSession[chatId]) {
-    userSession[chatId] = { currentStep: 0, data: {} }
+    userSession[chatId] = { currentStep: 0, data: {}, responses: [] }
   }
 
   const session = userSession[chatId]
@@ -113,50 +117,21 @@ Here's the Link to your Study Pack.`
   if (promptIndex < prompts.length) {
     const currentPrompt = prompts[promptIndex]
 
-    if (
-      promptIndex === 1 &&
-      userResponses[chatId] &&
-      userResponses[chatId][1]?.text === "No"
-    ) {
-      session.currentStep = +2
+    const options = currentPrompt.response.map((resp) => [{ text: resp.text }])
 
-      // await sendNextQuestion(chatId)
-      const options = currentPrompt.response.map((resp) => [
-        { text: resp.text },
-      ])
+    const question = `${promptIndex + 1} - ${currentPrompt.question}`
 
-      const question = `${promptIndex + 1} - ${currentPrompt.question}`
+    session.currentStep++
+    session.data.currentPrompt = currentPrompt
 
-      // session.currentStep++
-      session.data.currentPrompt = currentPrompt
-
-      const replyMarkup = {
-        keyboard: options,
-        resize_keyboard: true,
-      }
-
-      await telegramBot.sendMessage(chatId, question, {
-        reply_markup: replyMarkup,
-      })
-    } else {
-      const options = currentPrompt.response.map((resp) => [
-        { text: resp.text },
-      ])
-
-      const question = `${promptIndex + 1} - ${currentPrompt.question}`
-
-      session.currentStep++
-      session.data.currentPrompt = currentPrompt
-
-      const replyMarkup = {
-        keyboard: options,
-        resize_keyboard: true,
-      }
-
-      await telegramBot.sendMessage(chatId, question, {
-        reply_markup: replyMarkup,
-      })
+    const replyMarkup = {
+      keyboard: options,
+      resize_keyboard: true,
     }
+
+    await telegramBot.sendMessage(chatId, question, {
+      reply_markup: replyMarkup,
+    })
   } else {
     // prompts completed
     delete userResponses[chatId] // is this correct / necessary?
@@ -179,7 +154,7 @@ const sendPackLink = async (chatId: number): Promise<void> => {
       [
         {
           text: "Read Study Pack Online",
-          url: "https://oeqalagos.com/wp-content/uploads/2020/03/Year-1-Home-Learning-Pack.pdf-min.pdf",
+          url: pack,
         },
       ],
     ],
@@ -200,21 +175,81 @@ telegramBot.on("message", async (message) => {
 
   const session = userSession[chatId]
 
-  console.log(userSession[chatId]?.currentStep)
-
   if (session && session.data.currentPrompt) {
     const selectedOption = session.data.currentPrompt.response.find(
       (resp) => resp.text === response
     )
 
     if (selectedOption) {
-      userResponses[chatId] = userResponses[chatId] || []
-      userResponses[chatId].push(selectedOption)
+      console.log(userSession[chatId].currentStep)
+      console.log(selectedOption)
+      session.responses.push(selectedOption)
 
-      const action: ResponseAction | undefined =
-        responseActions[selectedOption.value]
+      // switch statements
+      switch (session.currentStep === 1 && selectedOption.value) {
+        case "Primary 1":
+          pack =
+            "https://oeqalagos.com/wp-content/uploads/2020/03/Year-1-Home-Learning-Pack.pdf-min.pdf"
+          break
+        case "Primary 2":
+          pack =
+            "https://oeqalagos.com/wp-content/uploads/2020/03/Year-2-Home-Learning-Pack.pdf-min.pdf"
+          break
+        case "Primary 3":
+          pack =
+            "https://oeqalagos.com/wp-content/uploads/2020/03/Year-3-Home-Learning-Pack.pdf-min.pdf"
+          break
+        case "Primary 4":
+          pack =
+            "https://oeqalagos.com/wp-content/uploads/2020/03/Year-4-Home-Learning-Pack.pdf-min.pdf"
+          break
+        case "Primary 5":
+          pack =
+            "https://oeqalagos.com/wp-content/uploads/2020/03/Year-5-Home-Learning-Pack-.pdf-min.pdf"
+          break
+        case "Primary 6":
+          pack =
+            "https://oeqalagos.com/wp-content/uploads/2020/03/Year-6-Home-Learning-Pack-min.pdf"
+          break
+        default:
+          pack = "https://oeqalagos.com/"
+      }
 
-      await sendNextQuestion(chatId)
+      switch (session.currentStep === 4 && selectedOption.value) {
+        case "Waec Prep Kit":
+          pack =
+            "https://oeqalagos.com/wp-content/uploads/2020/04/waec-prep-kit-min.pdf"
+          break
+        case "Tips for Virtual Education":
+          pack =
+            "https://oeqalagos.com/wp-content/uploads/2020/04/Tips-for-Virtual-Education-min.pdf"
+          break
+        default:
+          pack = "https://oeqalagos.com/"
+      }
+
+      if (session.currentStep === 2 && selectedOption.text === "No") {
+        session.currentStep += 1
+
+        const currentPrompt = prompts[session.currentStep]
+        
+        const options = currentPrompt.response.map((resp) => [{ text: resp.text }])
+        
+        const question = `${session.currentStep + 1} - ${currentPrompt.question}`
+
+        const replyMarkup = {
+          keyboard: options,
+          resize_keyboard: true,
+        }
+
+        await telegramBot.sendMessage(chatId, question, {
+          reply_markup: replyMarkup,
+        })
+
+        // await sendNextQuestion(chatId)
+      } else {
+        await sendNextQuestion(chatId)
+      }
     } else {
       await telegramBot.sendMessage(
         chatId,
@@ -261,7 +296,7 @@ const captureUserName = async (chatId: number) => {
 telegramBot.onText(/\/start/i, async (message) => {
   const chatId = message.chat.id
 
-  userSession[chatId] = { currentStep: 0, data: {} }
+  userSession[chatId] = { currentStep: 0, data: {}, responses: [] }
   userResponses[chatId] = []
   delete userName[chatId]
 
