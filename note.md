@@ -111,3 +111,69 @@ if (
         reply_markup: replyMarkup,
       })
     }
+
+    <!-- new  -->
+    if (session.currentStep === 2 && selectedOption.value === "No") {
+      //   session.currentStep += 2
+
+      //   const currentPrompt = prompts[session.currentStep]
+
+      //   const options = currentPrompt?.response.map((resp) => [
+      //     { text: resp.text },
+      //   ])
+
+      //   const question = `${session.currentStep + 1} - ${
+      //     currentPrompt?.question
+      //   }`
+
+      //   const replyMarkup = {
+      //     keyboard: options,
+      //     resize_keyboard: true,
+      //   }
+
+      //   await telegramBot.sendMessage(chatId, question, {
+      //     reply_markup: replyMarkup,
+      //   })
+
+      //   // await sendPackLink(chatId)
+
+      //   // await sendNextQuestion(chatId)
+      // } else if (session.currentStep === 4 && selectedOption.value) {
+      //   console.log("called No 4")
+      //   await sendNextQuestion(chatId)
+      //   // await sendPackLink(chatId)
+      // } else if (session.currentStep === 1 && selectedOption.value) {
+      //   sendNextQuestion(chatId)
+      // } 
+
+      <!-- newest -->
+      if (session.currentStep === 2 && selectedOption.text === "No") {
+        session.currentStep += 1
+        const currentPrompt = prompts[session.currentStep]
+
+        const options = currentPrompt?.response.map((resp) => [
+          { text: resp.text },
+        ])
+
+        const question = `${session.currentStep + 1} - ${
+          currentPrompt?.question
+        }`
+
+        const replyMarkup = {
+          keyboard: options,
+          resize_keyboard: true,
+        }
+
+        await telegramBot.sendMessage(chatId, question, {
+          reply_markup: replyMarkup,
+        })
+
+        console.log("No selected", currentPrompt, session.currentStep)
+      } else if (session.currentStep === 4 && selectedOption.value) {
+        await sendNextQuestion(chatId)
+        await sendPackLink(chatId)
+      } else if (session.currentStep === 3) {
+        await sendPackLink(chatId)
+      } else {
+        await sendNextQuestion(chatId)
+      }

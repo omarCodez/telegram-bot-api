@@ -143,12 +143,12 @@ Here's the Link to your Study Pack.`
         remove_keyboard: true,
       },
     })
-    await sendPackLink(chatId)
+    await sendPackLink(chatId, pack)
   }
 }
 
 // Send study pack link
-const sendPackLink = async (chatId: number): Promise<void> => {
+const sendPackLink = async (chatId: number, pack: string): Promise<void> => {
   const keyboard = {
     inline_keyboard: [
       [
@@ -169,6 +169,8 @@ const sendPackLink = async (chatId: number): Promise<void> => {
   )
 }
 
+let primarySelection: string
+
 telegramBot.on("message", async (message) => {
   const chatId = message.chat.id
   const response = message.text
@@ -182,87 +184,60 @@ telegramBot.on("message", async (message) => {
 
     if (selectedOption) {
       console.log(userSession[chatId].currentStep)
-      console.log(selectedOption)
+      console.log(selectedOption.text)
       session.responses.push(selectedOption)
 
-      // switch statements
-      switch (session.currentStep === 1 && selectedOption.value) {
-        case "Primary 1":
-          pack =
-            "https://oeqalagos.com/wp-content/uploads/2020/03/Year-1-Home-Learning-Pack.pdf-min.pdf"
-          break
-        case "Primary 2":
-          pack =
-            "https://oeqalagos.com/wp-content/uploads/2020/03/Year-2-Home-Learning-Pack.pdf-min.pdf"
-          break
-        case "Primary 3":
-          pack =
-            "https://oeqalagos.com/wp-content/uploads/2020/03/Year-3-Home-Learning-Pack.pdf-min.pdf"
-          break
-        case "Primary 4":
-          pack =
-            "https://oeqalagos.com/wp-content/uploads/2020/03/Year-4-Home-Learning-Pack.pdf-min.pdf"
-          break
-        case "Primary 5":
-          pack =
-            "https://oeqalagos.com/wp-content/uploads/2020/03/Year-5-Home-Learning-Pack-.pdf-min.pdf"
-          break
-        case "Primary 6":
-          pack =
-            "https://oeqalagos.com/wp-content/uploads/2020/03/Year-6-Home-Learning-Pack-min.pdf"
-          break
-        default:
-          pack = "https://oeqalagos.com/"
-      }
+     
 
-      switch (session.currentStep === 4 && selectedOption.value) {
-        case "Waec Prep Kit":
-          pack =
-            "https://oeqalagos.com/wp-content/uploads/2020/04/waec-prep-kit-min.pdf"
-          break
-        case "Tips for Virtual Education":
-          pack =
-            "https://oeqalagos.com/wp-content/uploads/2020/04/Tips-for-Virtual-Education-min.pdf"
-          break
-        default:
-          pack = "https://oeqalagos.com/"
-      }
+      console.log("one here..... ", primarySelection)
 
       if (session.currentStep === 2 && selectedOption.text === "No") {
         session.currentStep += 1
-
-        const currentPrompt = prompts[session.currentStep]
-        
-        const options = currentPrompt.response.map((resp) => [{ text: resp.text }])
-        
-        const question = `${session.currentStep + 1} - ${currentPrompt.question}`
-
-        const replyMarkup = {
-          keyboard: options,
-          resize_keyboard: true,
-        }
-
-        await telegramBot.sendMessage(chatId, question, {
-          reply_markup: replyMarkup,
-        })
-
-        // await sendNextQuestion(chatId)
+        await sendNextQuestion(chatId)
+      } else if (session.currentStep === 3 && selectedOption.value) {
+        // pack = getPackLink(one)
+        console.log("make sure > ", primarySelection)
+        await sendPackLink(chatId, primarySelection)
+      } else if (session.currentStep === 4 && selectedOption.value) {
+        pack = getPackLink(selectedOption.value)
+        await sendPackLink(chatId, pack)
+      } else if (session.currentStep === 1 && selectedOption.value) {
+        primarySelection = getPackLink(selectedOption.value)
+        await sendNextQuestion(chatId)
       } else {
         await sendNextQuestion(chatId)
       }
     } else {
-      await telegramBot.sendMessage(
-        chatId,
-        `
-      Invalid Response.
-      
-      Please select a valid response.`
-      )
+      await telegramBot.sendMessage(chatId, `Invalid Selection`)
+      console.log(session.currentStep)
     }
   }
-
   // If there is a current Prompt
 })
+
+// -----
+const getPackLink = (value: string): string => {
+  switch (value) {
+    case "Primary 1":
+      return "https://oeqalagos.com/wp-content/uploads/2020/03/Year-1-Home-Learning-Pack.pdf-min.pdf"
+    case "Primary 2":
+      return "https://oeqalagos.com/wp-content/uploads/2020/03/Year-2-Home-Learning-Pack.pdf-min.pdf"
+    case "Primary 3":
+      return "https://oeqalagos.com/wp-content/uploads/2020/03/Year-3-Home-Learning-Pack.pdf-min.pdf"
+    case "Primary 4":
+      return "https://oeqalagos.com/wp-content/uploads/2020/03/Year-4-Home-Learning-Pack.pdf-min.pdf"
+    case "Primary 5":
+      return "https://oeqalagos.com/wp-content/uploads/2020/03/Year-5-Home-Learning-Pack-.pdf-min.pdf"
+    case "Primary 6":
+      return "https://oeqalagos.com/wp-content/uploads/2020/03/Year-6-Home-Learning-Pack-min.pdf"
+    case "Waec Prep Kit":
+      return "https://oeqalagos.com/wp-content/uploads/2020/04/waec-prep-kit-min.pdf"
+    case "Tips for Virtual Education":
+      return "https://oeqalagos.com/wp-content/uploads/2020/04/Tips-for-Virtual-Education-min.pdf"
+    default:
+      return "https://oeqalagos.com/"
+  }
+}
 
 const captureUserName = async (chatId: number) => {
   // Capture response
