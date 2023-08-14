@@ -18,7 +18,6 @@ const webhookUrl = "https://telegram-bot-api-tawny.vercel.app";
 const telegramBot = new node_telegram_bot_api_1.default(telegramBotToken, {
     polling: false,
 });
-telegramBot.setWebHook(webhookUrl);
 let userName = {};
 let userResponses = {};
 const userSession = {};
@@ -202,6 +201,7 @@ const captureUserName = async (chatId) => {
 };
 // restart
 telegramBot.onText(/\/start/i, async (message) => {
+    await telegramBot.setWebHook(webhookUrl);
     const chatId = message.chat.id;
     userSession[chatId] = { currentStep: 0, data: {}, responses: [] };
     userResponses[chatId] = [];

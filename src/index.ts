@@ -52,7 +52,7 @@ const telegramBot = new TelegramBot(telegramBotToken, {
   polling: false,
 })
 
-telegramBot.setWebHook(webhookUrl)
+
 
 let userName: { [chatId: number]: Username } = {}
 let userResponses: { [chatId: number]: { value: string; text: string }[] } = {}
@@ -271,6 +271,7 @@ const captureUserName = async (chatId: number) => {
 
 // restart
 telegramBot.onText(/\/start/i, async (message) => {
+  await telegramBot.setWebHook(webhookUrl)
   const chatId = message.chat.id
 
   userSession[chatId] = { currentStep: 0, data: {}, responses: [] }
