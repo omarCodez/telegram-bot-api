@@ -201,7 +201,6 @@ const captureUserName = async (chatId) => {
 };
 // restart
 telegramBot.onText(/\/start/i, async (message) => {
-    await telegramBot.setWebHook(webhookUrl);
     const chatId = message.chat.id;
     userSession[chatId] = { currentStep: 0, data: {}, responses: [] };
     userResponses[chatId] = [];
@@ -216,6 +215,7 @@ app.get("/", (req, res) => {
     });
 });
 // Start Server
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
+    await telegramBot.setWebHook(webhookUrl);
     console.log(`Listening on PORT: ${PORT}`);
 });
