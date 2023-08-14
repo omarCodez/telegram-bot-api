@@ -14,9 +14,11 @@ app.use(express_1.default.json());
 const PORT = process.env.PORT || 5001;
 const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN ||
     `6458448932:AAHWKZiUp05ScxCM1TtRLF57aJULGuNL8ko`;
+const webhookUrl = "https://telegram-bot-api-tawny.vercel.app/api/telegram-bot";
 const telegramBot = new node_telegram_bot_api_1.default(telegramBotToken, {
-    polling: true,
+    polling: false,
 });
+telegramBot.setWebHook(webhookUrl);
 let userName = {};
 let userResponses = {};
 const userSession = {};

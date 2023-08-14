@@ -46,9 +46,13 @@ const telegramBotToken =
   process.env.TELEGRAM_BOT_TOKEN ||
   `6458448932:AAHWKZiUp05ScxCM1TtRLF57aJULGuNL8ko`
 
+const webhookUrl = "https://telegram-bot-api-tawny.vercel.app/api/telegram-bot"
+
 const telegramBot = new TelegramBot(telegramBotToken, {
-  polling: true,
+  polling: false,
 })
+
+telegramBot.setWebHook(webhookUrl)
 
 let userName: { [chatId: number]: Username } = {}
 let userResponses: { [chatId: number]: { value: string; text: string }[] } = {}
