@@ -16,7 +16,7 @@ const telegramBotToken = process.env.TELEGRAM_BOT_TOKEN ||
     `6458448932:AAHWKZiUp05ScxCM1TtRLF57aJULGuNL8ko`;
 const webhookUrl = "https://telegram-bot-api-tawny.vercel.app";
 const telegramBot = new node_telegram_bot_api_1.default(telegramBotToken, {
-    polling: false,
+    polling: true,
 });
 let userName = {};
 let userResponses = {};
@@ -115,7 +115,9 @@ const sendPackLink = async (chatId, pack) => {
         reply_markup: keyboard,
     });
 };
-let primarySelection;
+let classSelection;
+let studentClass;
+let subjectLink;
 telegramBot.on("message", async (message) => {
     const chatId = message.chat.id;
     const response = message.text;
@@ -126,22 +128,112 @@ telegramBot.on("message", async (message) => {
             console.log(userSession[chatId].currentStep);
             console.log(selectedOption.text);
             session.responses.push(selectedOption);
-            console.log("one here..... ", primarySelection);
+            console.log("one here..... ", classSelection);
             if (session.currentStep === 2 && selectedOption.text === "No") {
                 session.currentStep += 1;
                 await sendNextQuestion(chatId);
             }
             else if (session.currentStep === 3 && selectedOption.value) {
-                // pack = getPackLink(one)
-                console.log("make sure > ", primarySelection);
-                await sendPackLink(chatId, primarySelection);
+                // TODO:
+                if (studentClass === "Primary 1" ||
+                    studentClass === "Primary 2" ||
+                    studentClass === "Primary 3") {
+                    switch (selectedOption.value) {
+                        case "English":
+                            subjectLink =
+                                "https://oeqalagos.com/wp-content/uploads/2023/08/Pry-1-3-English.pdf";
+                            break;
+                        case "Maths":
+                            subjectLink =
+                                "https://oeqalagos.com/wp-content/uploads/2023/08/Pry-1-3-Mathematics.pdf";
+                            break;
+                        case "Science":
+                            subjectLink =
+                                "https://oeqalagos.com/wp-content/uploads/2023/08/Pry-1-3-Science.pdf";
+                            break;
+                        default:
+                            subjectLink = "https://google.com";
+                            break;
+                    }
+                }
+                else if (studentClass === "Primary 4" ||
+                    studentClass === "Primary 5" ||
+                    studentClass === "Primary 6") {
+                    switch (selectedOption.value) {
+                        case "English":
+                            subjectLink =
+                                "https://oeqalagos.com/wp-content/uploads/2023/08/Pry-4-6-English.pdf";
+                            break;
+                        case "Maths":
+                            subjectLink =
+                                "https://oeqalagos.com/wp-content/uploads/2023/08/Pry-4-6-Maths.pdf";
+                            break;
+                        case "Science":
+                            subjectLink =
+                                "https://oeqalagos.com/wp-content/uploads/2023/08/Pry-4-6-Science.pdf";
+                            break;
+                        default:
+                            subjectLink = "https://google.com";
+                            break;
+                    }
+                }
+                else if (studentClass === "JSS 1" ||
+                    studentClass === "JSS 2" ||
+                    studentClass === "JSS 3") {
+                    switch (selectedOption.value) {
+                        case "English":
+                            subjectLink =
+                                "https://oeqalagos.com/wp-content/uploads/2023/08/Jss1-3-English.pdf";
+                            break;
+                        case "Maths":
+                            subjectLink =
+                                "https://oeqalagos.com/wp-content/uploads/2023/08/Jss1-3-Maths.pdf";
+                            break;
+                        case "Science":
+                            subjectLink =
+                                "https://oeqalagos.com/wp-content/uploads/2023/08/Jss1-3-Science.pdf";
+                            break;
+                        default:
+                            subjectLink = "https://google.com";
+                            break;
+                    }
+                }
+                else if (studentClass === "SSS 1" ||
+                    studentClass === "SSS 2" ||
+                    studentClass === "SSS 3") {
+                    switch (selectedOption.value) {
+                        case "English":
+                            subjectLink =
+                                "https://oeqalagos.com/wp-content/uploads/2023/08/Jss1-3-English.pdf";
+                            break;
+                        case "Maths":
+                            subjectLink =
+                                "https://oeqalagos.com/wp-content/uploads/2023/08/SS1-3-Maths.pdf";
+                            break;
+                        case "Science":
+                            subjectLink =
+                                "https://oeqalagos.com/wp-content/uploads/2023/08/Jss1-3-Science.pdf";
+                            break;
+                        default:
+                            subjectLink = "https://google.com";
+                            break;
+                    }
+                }
+                else {
+                    subjectLink = "https://google.com/wrong";
+                    console.log("something went wrong");
+                }
+                console.log("make sure > ", subjectLink);
+                console.log("class selection ", classSelection);
+                await sendPackLink(chatId, subjectLink);
             }
             else if (session.currentStep === 4 && selectedOption.value) {
                 pack = getPackLink(selectedOption.value);
                 await sendPackLink(chatId, pack);
             }
             else if (session.currentStep === 1 && selectedOption.value) {
-                primarySelection = getPackLink(selectedOption.value);
+                studentClass = selectedOption.value;
+                classSelection = getPackLink(selectedOption.value);
                 await sendNextQuestion(chatId);
             }
             else {
@@ -178,6 +270,28 @@ const getPackLink = (value) => {
             return "https://oeqalagos.com/";
     }
 };
+const subLinks = {
+    pri1to3: {
+        English: "https://oeqalagos.com/wp-content/uploads/2023/08/Pry-1-3-English.pdf",
+        Mathematics: "https://oeqalagos.com/wp-content/uploads/2023/08/Pry-1-3-Mathematics.pdf",
+        Art: "https://oeqalagos.com/wp-content/uploads/2023/08/Pry-1-3-Art.pdf",
+        PhyEdu: "https://oeqalagos.com/wp-content/uploads/2023/08/Pry-1-3-Physical-Education.pdf",
+        Science: "https://oeqalagos.com/wp-content/uploads/2023/08/Pry-1-3-Science.pdf",
+        Answers: "https://oeqalagos.com/wp-content/uploads/2023/08/Pry-1-3-Answers.pdf",
+    },
+    pri4to6: {
+        English: "https://oeqalagos.com/wp-content/uploads/2023/08/Pry-4-6-English.pdf",
+        Mathematics: "https://oeqalagos.com/wp-content/uploads/2023/08/Pry-4-6-Maths.pdf",
+        Science: "https://oeqalagos.com/wp-content/uploads/2023/08/Pry-4-6-Science.pdf",
+        WellBeing: "https://oeqalagos.com/wp-content/uploads/2023/08/Jss1-3-Well-Being.pdf",
+        WritingPrompt: "https://oeqalagos.com/wp-content/uploads/2023/08/Jss1-3-Writing-prompts.pdf",
+        Answers: "https://oeqalagos.com/wp-content/uploads/2023/08/Jss1-3-Answers.pdf",
+    },
+    ss1to3: {
+        Mathematics: "https://oeqalagos.com/wp-content/uploads/2023/08/SS1-3-Maths.pdf",
+        Answers: "https://oeqalagos.com/wp-content/uploads/2023/08/SS1-3-Answers.pdf",
+    },
+};
 const captureUserName = async (chatId) => {
     // Capture response
     await telegramBot.sendMessage(chatId, `What is your First and Last Name?`);
@@ -213,6 +327,19 @@ app.get("/", (req, res) => {
     return res.status(200).json({
         msg: "Working fine.",
     });
+});
+// Create a route to handle incoming Telegram updates (webhook)
+// app.post(`/${telegramBotToken}`, (req: Request, res: Response) => {
+//   // process incoming update from telegram
+//   telegramBot.processUpdate(req.body)
+//   // respond to the request
+//   res.status(200)
+// })
+// Set the webhook for the bot
+// telegramBot.setWebHook(`${webhookUrl}/${telegramBotToken}`)
+// Handle errors
+telegramBot.on("polling_error", (error) => {
+    console.error(error);
 });
 // Start Server
 app.listen(PORT, async () => {
