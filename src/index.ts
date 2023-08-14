@@ -85,7 +85,7 @@ const responseActions: Record<string, ResponseAction> = {
     await telegramBot.sendMessage(chatId, "You selected Maths.")
   },
   Science: async (chatId: number) => {
-    // Handle Science option
+    // Handle Science optiondelete my project
     await telegramBot.sendMessage(chatId, "You selected Science.")
   },
   Biology: async (chatId: number) => {

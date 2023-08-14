@@ -5,9 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start:dev": "npx nodemon",
-    "start": "npm run build && node dist/index.js",
-    "build": "rimraf dist && swc ./src -d dist"
+    "start": "nodemon src/index.ts",
+    "build": "rimraf dist && tsc",
+    "ts.check": "tsc --project tsconfig.json",
+    "add-build": "git add dist"
   },
   "repository": {
     "type": "git",
@@ -18,6 +19,11 @@
     "Bot",
     "Api"
   ],
+  "pre-commit": [
+    "ts.check",
+    "build",
+    "add-build"
+  ],
   "author": "Ridwan Adefemi Odubona",
   "license": "UNLICENSED",
   "dependencies": {
@@ -26,6 +32,7 @@
     "express": "^4.18.2",
     "node-fetch": "^3.3.2",
     "node-telegram-bot-api": "^0.61.0",
+    "pre-commit": "^1.2.2",
     "rimraf": "^5.0.1",
     "typescript": "^5.1.6"
   },
