@@ -207,6 +207,12 @@ telegramBot.onText(/\/start/i, async (message) => {
     await telegramBot.sendMessage(chatId, welcomeMessage);
     captureUserName(chatId);
 });
+// check api health
+app.get("/", (req, res) => {
+    return res.status(200).json({
+        msg: "Working fine.",
+    });
+});
 // Start Server
 app.listen(PORT, () => {
     console.log(`Listening on PORT: ${PORT}`);

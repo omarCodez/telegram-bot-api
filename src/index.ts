@@ -1,4 +1,4 @@
-import express, { Express } from "express"
+import express, { Express, Request, Response } from "express"
 import TelegramBot, {
   KeyboardButton,
   Message,
@@ -187,8 +187,6 @@ telegramBot.on("message", async (message) => {
       console.log(selectedOption.text)
       session.responses.push(selectedOption)
 
-     
-
       console.log("one here..... ", primarySelection)
 
       if (session.currentStep === 2 && selectedOption.text === "No") {
@@ -278,6 +276,13 @@ telegramBot.onText(/\/start/i, async (message) => {
   await telegramBot.sendMessage(chatId, welcomeMessage)
 
   captureUserName(chatId)
+})
+
+// check api health
+app.get("/", (req: Request, res: Response) => {
+  return res.status(200).json({
+    msg: "Working fine.",
+  })
 })
 
 // Start Server
