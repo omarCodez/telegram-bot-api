@@ -189,14 +189,14 @@ const captureUserName = async (chatId) => {
     });
 };
 // restart
-telegramBot.onText(/\/start/i, async (message) => {
-    const chatId = message.chat.id;
-    userSession[chatId] = { currentStep: 0, data: {}, responses: [] };
-    userResponses[chatId] = [];
-    delete userName[chatId];
-    await telegramBot.sendMessage(chatId, welcomeMessage);
-    await captureUserName(chatId);
-});
+// telegramBot.onText(/\/start/i, async (message) => {
+//   const chatId = message.chat.id
+//   userSession[chatId] = { currentStep: 0, data: {}, responses: [] }
+//   userResponses[chatId] = []
+//   delete userName[chatId]
+//   await telegramBot.sendMessage(chatId, welcomeMessage)
+//   captureUserName(chatId)
+// })
 // Create a route to handle incoming Telegram updates (webhook)
 app.post(`/bot${telegramBotToken}`, async (req, res) => {
     const update = req.body;
@@ -209,8 +209,7 @@ app.post(`/bot${telegramBotToken}`, async (req, res) => {
             userResponses[chatId] = [];
             delete userName[chatId];
             await telegramBot.sendMessage(chatId, welcomeMessage);
-            await captureUserName(chatId);
-            await sendNextQuestion(chatId);
+            captureUserName(chatId);
         }
         else {
             const chatId = message.chat.id;
