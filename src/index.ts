@@ -46,7 +46,7 @@ const telegramBotToken =
   process.env.TELEGRAM_BOT_TOKEN ||
   `6458448932:AAHWKZiUp05ScxCM1TtRLF57aJULGuNL8ko`
 
-const webhookUrl = "https://telegram-bot-api-tawny.vercel.app"
+const webhookUrl = "https://telegram-bot-api-tawny.vercel.app/"
 
 const telegramBot = new TelegramBot(telegramBotToken, {
   webHook: {
@@ -427,7 +427,7 @@ app.get("/", (req: Request, res: Response) => {
 })
 
 // Create a route to handle incoming Telegram updates (webhook)
-app.post(`/api/bot${telegramBotToken}`, (req: Request, res: Response) => {
+app.post(`/bot${telegramBotToken}`, (req: Request, res: Response) => {
   // process incoming update from telegram
   telegramBot.processUpdate(req.body)
   // respond to the request
