@@ -55,7 +55,7 @@ const telegramBot = new TelegramBot(telegramBotToken, {
   },
 })
 
-telegramBot.setWebHook(`${webhookUrl}/bot${telegramBotToken}`)
+telegramBot.setWebHook(`${webhookUrl}bot${telegramBotToken}`)
 
 let userName: { [chatId: number]: Username } = {}
 let userResponses: { [chatId: number]: { value: string; text: string }[] } = {}

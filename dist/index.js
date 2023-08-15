@@ -21,7 +21,7 @@ const telegramBot = new node_telegram_bot_api_1.default(telegramBotToken, {
         host: '0.0.0.0'
     },
 });
-telegramBot.setWebHook(`${webhookUrl}/bot${telegramBotToken}`);
+telegramBot.setWebHook(`${webhookUrl}bot${telegramBotToken}`);
 let userName = {};
 let userResponses = {};
 const userSession = {};
