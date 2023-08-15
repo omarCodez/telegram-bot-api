@@ -9,3 +9,32 @@ https://api.telegram.org/bot<token>/METHOD NAME
 https://api.telegram.org/bot6458448932:AAHWKZiUp05ScxCM1TtRLF57aJULGuNL8ko/setWebhook?url=https://telegram-bot-api-tawny.vercel.app/
 
 <!-- get webhook info -->
+
+
+const captureUserName = async (chatId: number) => {
+  // Capture response
+  await telegramBot.sendMessage(chatId, `What is your First and Last Name?`)
+  telegramBot.once("message", async (responseMsg) => {
+    const names = responseMsg.text
+
+    if (names) {
+      const [firstname, lastname] = names.split(" ", 2)
+
+      userName[chatId] = {
+        firstname,
+        lastname,
+      }
+
+      await telegramBot.sendMessage(
+        chatId,
+        `
+      Welcome! ${firstname}`
+      )
+
+      await sendNextQuestion(chatId)
+    } else {
+      await telegramBot.sendMessage(chatId, "Enter Your Names to Proceed!.")
+      captureUserName(chatId) // Re-capture user's name if not provided
+    }
+  })
+}

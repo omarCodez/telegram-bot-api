@@ -168,9 +168,7 @@ const subLinks = {
     },
 };
 const captureUserName = async (chatId) => {
-    // Capture response
-    await telegramBot.sendMessage(chatId, `What is your First and Last Name?`);
-    telegramBot.once("message", async (responseMsg) => {
+    const messageListener = (responseMsg) => {
         const names = responseMsg.text;
         if (names) {
             const [firstname, lastname] = names.split(" ", 2);
@@ -178,15 +176,18 @@ const captureUserName = async (chatId) => {
                 firstname,
                 lastname,
             };
-            await telegramBot.sendMessage(chatId, `
-      Welcome! ${firstname}`);
-            await sendNextQuestion(chatId);
+            telegramBot.sendMessage(chatId, `Welcome! ${firstname}`);
+            sendNextQuestion(chatId);
+            telegramBot.removeListener("message", messageListener); // Remove the listener once it's used
         }
         else {
-            await telegramBot.sendMessage(chatId, "Enter Your Names to Proceed!.");
-            captureUserName(chatId); // Re-capture user's name if not provided
+            telegramBot.sendMessage(chatId, "Enter Your Names to Proceed!");
         }
-    });
+    };
+    // Set up the message listener before sending the initial prompt
+    telegramBot.on("message", messageListener);
+    // Send the initial prompt
+    await telegramBot.sendMessage(chatId, "What is your First and Last Name?");
 };
 // restart
 telegramBot.onText(/\/start/i, async (message) => {
