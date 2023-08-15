@@ -9,6 +9,10 @@
   ],
   "routes": [
     {
+      "src": "/bot(.*)",
+      "dest": "dist/index.js"
+    },
+    {
       "src": "/(.*)",
       "dest": "dist/index.js"
     }
