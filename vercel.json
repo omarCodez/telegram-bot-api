@@ -9,11 +9,11 @@
   ],
   "routes": [
     {
-      "src": "/bot(.*)",
+      "src": "/(.*)",
       "dest": "dist/index.js"
     },
     {
-      "src": "/(.*)",
+      "src": "/bot(.*)",
       "dest": "dist/index.js"
     }
   ]
