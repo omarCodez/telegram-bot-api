@@ -427,7 +427,7 @@ app.get("/", (req: Request, res: Response) => {
 })
 
 // Create a route to handle incoming Telegram updates (webhook)
-app.post(`/bot${telegramBotToken}`, (req: Request, res: Response) => {
+app.post(`bot${telegramBotToken}`, (req: Request, res: Response) => {
   // process incoming update from telegram
   telegramBot.processUpdate(req.body)
   // respond to the request

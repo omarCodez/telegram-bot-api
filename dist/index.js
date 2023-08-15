@@ -333,7 +333,7 @@ app.get("/", (req, res) => {
     });
 });
 // Create a route to handle incoming Telegram updates (webhook)
-app.post(`/bot${telegramBotToken}`, (req, res) => {
+app.post(`bot${telegramBotToken}`, (req, res) => {
     // process incoming update from telegram
     telegramBot.processUpdate(req.body);
     // respond to the request
