@@ -195,7 +195,7 @@ telegramBot.onText(/\/start/i, async (message) => {
     userResponses[chatId] = [];
     delete userName[chatId];
     await telegramBot.sendMessage(chatId, welcomeMessage);
-    captureUserName(chatId);
+    await captureUserName(chatId);
 });
 // Create a route to handle incoming Telegram updates (webhook)
 app.post(`/bot${telegramBotToken}`, async (req, res) => {
@@ -203,141 +203,131 @@ app.post(`/bot${telegramBotToken}`, async (req, res) => {
     const message = update.message;
     // check if the update is a message
     if (message) {
-        if (message?.text?.match(/\/start/i)) {
-            const chatId = message.chat.id;
-            userSession[chatId] = { currentStep: 0, data: {}, responses: [] };
-            userResponses[chatId] = [];
-            delete userName[chatId];
-            await telegramBot.sendMessage(chatId, welcomeMessage);
-            captureUserName(chatId);
-        }
-        else {
-            const chatId = message.chat.id;
-            const response = message.text;
-            const session = userSession[chatId];
-            // TODO: start
-            if (session && session.data.currentPrompt) {
-                const selectedOption = session.data.currentPrompt.response.find((resp) => resp.text === response);
-                if (selectedOption) {
-                    console.log(userSession[chatId].currentStep);
-                    console.log(selectedOption.text);
-                    session.responses.push(selectedOption);
-                    console.log("one here..... ", classSelection);
-                    if (session.currentStep === 2 && selectedOption.text === "No") {
-                        session.currentStep += 1;
-                        await sendNextQuestion(chatId);
+        const chatId = message.chat.id;
+        const response = message.text;
+        const session = userSession[chatId];
+        // TODO: start
+        if (session && session.data.currentPrompt) {
+            const selectedOption = session.data.currentPrompt.response.find((resp) => resp.text === response);
+            if (selectedOption) {
+                console.log(userSession[chatId].currentStep);
+                console.log(selectedOption.text);
+                session.responses.push(selectedOption);
+                console.log("one here..... ", classSelection);
+                if (session.currentStep === 2 && selectedOption.text === "No") {
+                    session.currentStep += 1;
+                    await sendNextQuestion(chatId);
+                }
+                else if (session.currentStep === 3 && selectedOption.value) {
+                    // TODO:
+                    if (studentClass === "Primary 1" ||
+                        studentClass === "Primary 2" ||
+                        studentClass === "Primary 3") {
+                        switch (selectedOption.value) {
+                            case "English":
+                                subjectLink =
+                                    "https://oeqalagos.com/wp-content/uploads/2023/08/Pry-1-3-English.pdf";
+                                break;
+                            case "Maths":
+                                subjectLink =
+                                    "https://oeqalagos.com/wp-content/uploads/2023/08/Pry-1-3-Mathematics.pdf";
+                                break;
+                            case "Science":
+                                subjectLink =
+                                    "https://oeqalagos.com/wp-content/uploads/2023/08/Pry-1-3-Science.pdf";
+                                break;
+                            default:
+                                subjectLink = "https://google.com";
+                                break;
+                        }
                     }
-                    else if (session.currentStep === 3 && selectedOption.value) {
-                        // TODO:
-                        if (studentClass === "Primary 1" ||
-                            studentClass === "Primary 2" ||
-                            studentClass === "Primary 3") {
-                            switch (selectedOption.value) {
-                                case "English":
-                                    subjectLink =
-                                        "https://oeqalagos.com/wp-content/uploads/2023/08/Pry-1-3-English.pdf";
-                                    break;
-                                case "Maths":
-                                    subjectLink =
-                                        "https://oeqalagos.com/wp-content/uploads/2023/08/Pry-1-3-Mathematics.pdf";
-                                    break;
-                                case "Science":
-                                    subjectLink =
-                                        "https://oeqalagos.com/wp-content/uploads/2023/08/Pry-1-3-Science.pdf";
-                                    break;
-                                default:
-                                    subjectLink = "https://google.com";
-                                    break;
-                            }
+                    else if (studentClass === "Primary 4" ||
+                        studentClass === "Primary 5" ||
+                        studentClass === "Primary 6") {
+                        switch (selectedOption.value) {
+                            case "English":
+                                subjectLink =
+                                    "https://oeqalagos.com/wp-content/uploads/2023/08/Pry-4-6-English.pdf";
+                                break;
+                            case "Maths":
+                                subjectLink =
+                                    "https://oeqalagos.com/wp-content/uploads/2023/08/Pry-4-6-Maths.pdf";
+                                break;
+                            case "Science":
+                                subjectLink =
+                                    "https://oeqalagos.com/wp-content/uploads/2023/08/Pry-4-6-Science.pdf";
+                                break;
+                            default:
+                                subjectLink = "https://google.com";
+                                break;
                         }
-                        else if (studentClass === "Primary 4" ||
-                            studentClass === "Primary 5" ||
-                            studentClass === "Primary 6") {
-                            switch (selectedOption.value) {
-                                case "English":
-                                    subjectLink =
-                                        "https://oeqalagos.com/wp-content/uploads/2023/08/Pry-4-6-English.pdf";
-                                    break;
-                                case "Maths":
-                                    subjectLink =
-                                        "https://oeqalagos.com/wp-content/uploads/2023/08/Pry-4-6-Maths.pdf";
-                                    break;
-                                case "Science":
-                                    subjectLink =
-                                        "https://oeqalagos.com/wp-content/uploads/2023/08/Pry-4-6-Science.pdf";
-                                    break;
-                                default:
-                                    subjectLink = "https://google.com";
-                                    break;
-                            }
-                        }
-                        else if (studentClass === "JSS 1" ||
-                            studentClass === "JSS 2" ||
-                            studentClass === "JSS 3") {
-                            switch (selectedOption.value) {
-                                case "English":
-                                    subjectLink =
-                                        "https://oeqalagos.com/wp-content/uploads/2023/08/Jss1-3-English.pdf";
-                                    break;
-                                case "Maths":
-                                    subjectLink =
-                                        "https://oeqalagos.com/wp-content/uploads/2023/08/Jss1-3-Maths.pdf";
-                                    break;
-                                case "Science":
-                                    subjectLink =
-                                        "https://oeqalagos.com/wp-content/uploads/2023/08/Jss1-3-Science.pdf";
-                                    break;
-                                default:
-                                    subjectLink = "https://google.com";
-                                    break;
-                            }
-                        }
-                        else if (studentClass === "SSS 1" ||
-                            studentClass === "SSS 2" ||
-                            studentClass === "SSS 3") {
-                            switch (selectedOption.value) {
-                                case "English":
-                                    subjectLink =
-                                        "https://oeqalagos.com/wp-content/uploads/2023/08/Jss1-3-English.pdf";
-                                    break;
-                                case "Maths":
-                                    subjectLink =
-                                        "https://oeqalagos.com/wp-content/uploads/2023/08/SS1-3-Maths.pdf";
-                                    break;
-                                case "Science":
-                                    subjectLink =
-                                        "https://oeqalagos.com/wp-content/uploads/2023/08/Jss1-3-Science.pdf";
-                                    break;
-                                default:
-                                    subjectLink = "https://google.com";
-                                    break;
-                            }
-                        }
-                        else {
-                            subjectLink = "https://google.com/wrong";
-                            console.log("something went wrong");
-                        }
-                        console.log("make sure > ", subjectLink);
-                        console.log("class selection ", classSelection);
-                        await sendPackLink(chatId, subjectLink);
                     }
-                    else if (session.currentStep === 4 && selectedOption.value) {
-                        pack = getPackLink(selectedOption.value);
-                        await sendPackLink(chatId, pack);
+                    else if (studentClass === "JSS 1" ||
+                        studentClass === "JSS 2" ||
+                        studentClass === "JSS 3") {
+                        switch (selectedOption.value) {
+                            case "English":
+                                subjectLink =
+                                    "https://oeqalagos.com/wp-content/uploads/2023/08/Jss1-3-English.pdf";
+                                break;
+                            case "Maths":
+                                subjectLink =
+                                    "https://oeqalagos.com/wp-content/uploads/2023/08/Jss1-3-Maths.pdf";
+                                break;
+                            case "Science":
+                                subjectLink =
+                                    "https://oeqalagos.com/wp-content/uploads/2023/08/Jss1-3-Science.pdf";
+                                break;
+                            default:
+                                subjectLink = "https://google.com";
+                                break;
+                        }
                     }
-                    else if (session.currentStep === 1 && selectedOption.value) {
-                        studentClass = selectedOption.value;
-                        classSelection = getPackLink(selectedOption.value);
-                        await sendNextQuestion(chatId);
+                    else if (studentClass === "SSS 1" ||
+                        studentClass === "SSS 2" ||
+                        studentClass === "SSS 3") {
+                        switch (selectedOption.value) {
+                            case "English":
+                                subjectLink =
+                                    "https://oeqalagos.com/wp-content/uploads/2023/08/Jss1-3-English.pdf";
+                                break;
+                            case "Maths":
+                                subjectLink =
+                                    "https://oeqalagos.com/wp-content/uploads/2023/08/SS1-3-Maths.pdf";
+                                break;
+                            case "Science":
+                                subjectLink =
+                                    "https://oeqalagos.com/wp-content/uploads/2023/08/Jss1-3-Science.pdf";
+                                break;
+                            default:
+                                subjectLink = "https://google.com";
+                                break;
+                        }
                     }
                     else {
-                        await sendNextQuestion(chatId);
+                        subjectLink = "https://google.com/wrong";
+                        console.log("something went wrong");
                     }
+                    console.log("make sure > ", subjectLink);
+                    console.log("class selection ", classSelection);
+                    await sendPackLink(chatId, subjectLink);
+                }
+                else if (session.currentStep === 4 && selectedOption.value) {
+                    pack = getPackLink(selectedOption.value);
+                    await sendPackLink(chatId, pack);
+                }
+                else if (session.currentStep === 1 && selectedOption.value) {
+                    studentClass = selectedOption.value;
+                    classSelection = getPackLink(selectedOption.value);
+                    await sendNextQuestion(chatId);
                 }
                 else {
-                    await telegramBot.sendMessage(chatId, `Invalid Selection`);
-                    console.log(session.currentStep);
+                    await sendNextQuestion(chatId);
                 }
+            }
+            else {
+                await telegramBot.sendMessage(chatId, `Invalid Selection`);
+                console.log(session.currentStep);
             }
         }
     }
