@@ -324,7 +324,7 @@ telegramBot.onText(/\/start/i, async (message) => {
     userResponses[chatId] = [];
     delete userName[chatId];
     await telegramBot.sendMessage(chatId, welcomeMessage);
-    captureUserName(chatId);
+    await captureUserName(chatId);
 });
 // check api health
 app.get("/", (req, res) => {

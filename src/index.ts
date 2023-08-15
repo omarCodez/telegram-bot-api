@@ -416,7 +416,7 @@ telegramBot.onText(/\/start/i, async (message) => {
 
   await telegramBot.sendMessage(chatId, welcomeMessage)
 
-  captureUserName(chatId)
+  await captureUserName(chatId)
 })
 
 // check api health
