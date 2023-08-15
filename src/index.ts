@@ -300,6 +300,8 @@ app.post(`/bot${telegramBotToken}`, async (req: Request, res: Response) => {
       await telegramBot.sendMessage(chatId, welcomeMessage)
 
       await captureUserName(chatId)
+
+      await sendNextQuestion(chatId)
     } else {
       const chatId = message.chat.id
       const response = message.text

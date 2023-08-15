@@ -210,6 +210,7 @@ app.post(`/bot${telegramBotToken}`, async (req, res) => {
             delete userName[chatId];
             await telegramBot.sendMessage(chatId, welcomeMessage);
             await captureUserName(chatId);
+            await sendNextQuestion(chatId);
         }
         else {
             const chatId = message.chat.id;
