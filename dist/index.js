@@ -193,10 +193,10 @@ const captureUserName = async (chatId) => {
 telegramBot.onText(/\/start/i, async (message) => {
     const chatId = message.chat.id;
     userSession[chatId] = { currentStep: 0, data: {}, responses: [] };
-    userResponses[chatId] = [];
+    // userResponses[chatId] = []
     delete userName[chatId];
     await telegramBot.sendMessage(chatId, welcomeMessage);
-    await captureUserName(chatId);
+    captureUserName(chatId);
 });
 // Create a route to handle incoming Telegram updates (webhook)
 app.post(`/bot${telegramBotToken}`, async (req, res) => {
