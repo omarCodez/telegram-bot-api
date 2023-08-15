@@ -49,8 +49,13 @@ const telegramBotToken =
 const webhookUrl = "https://telegram-bot-api-tawny.vercel.app"
 
 const telegramBot = new TelegramBot(telegramBotToken, {
-  polling: true,
+  webHook: {
+    port: Number(process.env.PORT) || 5003,
+    host: '0.0.0.0'
+  },
 })
+
+telegramBot.setWebHook(`${webhookUrl}/bot${telegramBotToken}`)
 
 let userName: { [chatId: number]: Username } = {}
 let userResponses: { [chatId: number]: { value: string; text: string }[] } = {}
@@ -422,12 +427,12 @@ app.get("/", (req: Request, res: Response) => {
 })
 
 // Create a route to handle incoming Telegram updates (webhook)
-// app.post(`/${telegramBotToken}`, (req: Request, res: Response) => {
-//   // process incoming update from telegram
-//   telegramBot.processUpdate(req.body)
-//   // respond to the request
-//   res.status(200)
-// })
+app.post(`/api/bot${telegramBotToken}`, (req: Request, res: Response) => {
+  // process incoming update from telegram
+  telegramBot.processUpdate(req.body)
+  // respond to the request
+  res.status(200)
+})
 
 // Set the webhook for the bot
 // telegramBot.setWebHook(`${webhookUrl}/${telegramBotToken}`)
@@ -439,6 +444,6 @@ telegramBot.on("polling_error", (error) => {
 
 // Start Server
 app.listen(PORT, async () => {
-  await telegramBot.setWebHook(webhookUrl)
+  // await telegramBot.setWebHook(webhookUrl)
   console.log(`Listening on PORT: ${PORT}`)
 })

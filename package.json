@@ -33,6 +33,7 @@
     "node-fetch": "^3.3.2",
     "node-telegram-bot-api": "^0.61.0",
     "pre-commit": "^1.2.2",
+    "rate-limiter-flexible": "^2.4.2",
     "rimraf": "^5.0.1",
     "typescript": "^5.1.6"
   },

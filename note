@@ -1,0 +1,11 @@
+Deployment id : AKfycbzWvQ3lEqLXWedwlzKo1O9yKIQRFMmvFvAp9nqLIpdW4z5bD2bZkZC4JE88IkPjhun-
+
+web app url : 
+https://script.google.com/macros/s/AKfycbzWvQ3lEqLXWedwlzKo1O9yKIQRFMmvFvAp9nqLIpdW4z5bD2bZkZC4JE88IkPjhun-/exec
+
+https://api.telegram.org/bot<token>/METHOD NAME 
+
+<!-- note -->
+https://api.telegram.org/bot6458448932:AAHWKZiUp05ScxCM1TtRLF57aJULGuNL8ko/setWebhook?url=https://telegram-bot-api-tawny.vercel.app/
+
+<!-- get webhook info -->
