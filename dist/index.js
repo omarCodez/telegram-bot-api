@@ -196,7 +196,7 @@ telegramBot.onText(/\/start/i, async (message) => {
     // userResponses[chatId] = []
     delete userName[chatId];
     await telegramBot.sendMessage(chatId, welcomeMessage);
-    captureUserName(chatId);
+    await captureUserName(chatId);
 });
 // Create a route to handle incoming Telegram updates (webhook)
 app.post(`/bot${telegramBotToken}`, async (req, res) => {

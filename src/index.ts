@@ -279,7 +279,7 @@ telegramBot.onText(/\/start/i, async (message) => {
 
   await telegramBot.sendMessage(chatId, welcomeMessage)
 
-  captureUserName(chatId)
+  await captureUserName(chatId)
 })
 
 // Create a route to handle incoming Telegram updates (webhook)
